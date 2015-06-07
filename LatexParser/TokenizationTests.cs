@@ -51,24 +51,24 @@ namespace LatexParser
         [Test]
         public void Brackets()
         {
-            Run("{ab}[ab]<ab>", Latex.Curly(Latex.Text("ab")), Latex.Square(Latex.Text("ab")), Latex.Angular(Latex.Text("ab")));
+            Run("\\c{ab}[ab]<ab>", Latex.CommandToken("c"), Latex.Curly(Latex.Text("ab")), Latex.Square(Latex.Text("ab")), Latex.Angular(Latex.Text("ab")));
         }
 
         [Test]
         public void Nesting()
         {
-            Run("{a{b[c]}}", Latex.Curly(Latex.Text("a"), Latex.Curly(Latex.Text("b"), Latex.Square(Latex.Text("c")))));
+            Run("{a{b{c}}}", Latex.Curly(Latex.Text("a"), Latex.Curly(Latex.Text("b"), Latex.Square(Latex.Text("c")))));
         }
         
         [Test]
-        public void KnownBugWithAngular()
+        public void AngularWithoutCommand()
         {
             Run("a<b", Latex.Text("a<b"));
         }
-        
-        public void KnownBugWithLeftAndRight()
+
+        public void CommandsLeftAndRight()
         {
-            //Run("\\left[\\right]") don't know how result sohuld look
+            Run("\\left[\\right]", Latex.CommandToken("left"), Latex.Text("["), Latex.CommandToken("right"), Latex.Text("]"));
         }
     }
 }

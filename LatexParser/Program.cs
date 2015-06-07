@@ -10,7 +10,7 @@ namespace LatexParser
     {
         static void Main(string[] args)
         {
-            new CommandAssemblingTests().OneArgumentCommand();
+            new TokenizationTest().Nesting();
         }
     }
 }

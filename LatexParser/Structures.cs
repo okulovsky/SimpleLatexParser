@@ -33,6 +33,16 @@ namespace LatexParser
                 if (!Blocks[i].Equals(obj.Blocks[i])) return false;
             return true;
         }
+
+        public override string ToString()
+        {
+            var open = "";
+            var close = "";
+            if (Type == SequenceType.Angular) { open = "<"; close = ">"; }
+            if (Type == SequenceType.Curly) { open = "{"; close = "}"; }
+            if (Type == SequenceType.Square) { open = "["; close = "]"; }
+            return open + Blocks.Select(z => z.ToString()).Aggregate((a, b) => a + b) + close;
+        }
     }
 
     public interface IBlock

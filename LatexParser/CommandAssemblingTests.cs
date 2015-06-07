@@ -28,5 +28,7 @@ namespace LatexParser
         {
             Run("\\cmd{abc}{def}", Latex.Command("cmd", Latex.Curly(Latex.Text("abc")), Latex.Curly(Latex.Text("def"))));
         }
+
+       
     }
 }

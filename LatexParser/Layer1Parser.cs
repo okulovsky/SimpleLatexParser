@@ -26,7 +26,7 @@ namespace LatexParser
         {
             if (End())
             {
-                pointer++; 
+                pointer++;
                 return END;
             }
             return text[pointer++];
@@ -39,6 +39,20 @@ namespace LatexParser
         }
 
         Stack<Sequence> stack;
+
+        TextBlock LookBack()
+        {
+            var blocks = stack.Peek().Blocks;
+            for (int i = blocks.Count - 1; i >= 0; i--)
+            {
+                if (blocks[i] is Sequence) continue;
+                var text = blocks[i] as TextBlock;
+                if (text == null) return null;
+                if (text.Type != TextBlockType.Command) return null;
+                return text;
+            }
+            return null;
+        }
 
         void Push(SequenceType type)
         {
@@ -56,14 +70,14 @@ namespace LatexParser
         {
             stack.Peek().Blocks.Add(new TextBlock(type, text));
         }
-        
-        void ParseUntil(TextBlockType type, Func<char,bool> stopCondition)
+
+        void ParseUntil(TextBlockType type, Func<char, bool> stopCondition)
         {
-            var builder=new StringBuilder();
-            for (int i=0;;i++)
+            var builder = new StringBuilder();
+            for (int i = 0; ; i++)
             {
-                var s=Get();
-                if (stopCondition(s) || s==END)
+                var s = Get();
+                if (stopCondition(s) || s == END)
                 {
                     Back();
                     Store(builder.ToString(), type);
@@ -80,7 +94,7 @@ namespace LatexParser
             stack = new Stack<Sequence>();
             stack.Push(new Sequence(SequenceType.Free));
 
-            while(true)
+            while (true)
             {
                 var c = Get();
                 if (c == END) break;
@@ -99,7 +113,7 @@ namespace LatexParser
                 }
 
 
-                if (c=='\\')
+                if (c == '\\')
                 {
                     var v = Get();
                     if (EscapedCharacters.Contains(v))
@@ -116,16 +130,56 @@ namespace LatexParser
                 }
 
                 if (c == '{') Push(SequenceType.Curly);
-                else if (c == '[') Push(SequenceType.Square);
-                else if (c == '<') Push(SequenceType.Angular);
                 else if (c == '}') Pop(SequenceType.Curly);
-                else if (c == ']') Pop(SequenceType.Square);
-                else if (c == '>') Pop(SequenceType.Angular);
+                else if (c == '[')
+                {
+                    var back = LookBack();
+                    if (back == null || back.Entry == "left") Store(c.ToString(), TextBlockType.Text);
+                    else Push(SequenceType.Square);
+                }
+                else if (c == ']')
+                {
+                    if (stack.Peek().Type != SequenceType.Square)
+                        Store(c.ToString(), TextBlockType.Text);
+                    else Pop(SequenceType.Square);
+                }
+                else if (c == '<')
+                {
+                    var back = LookBack();
+                    if (back == null || back.Entry == "left") Store(c.ToString(), TextBlockType.Text);
+                    else Push(SequenceType.Angular);
+                }
+                else if (c == '>')
+                {
+                    if (stack.Peek().Type != SequenceType.Angular)
+                        Store(c.ToString(), TextBlockType.Text);
+                    else Pop(SequenceType.Angular);
+                }
                 else throw new Exception("Unexpected symbol " + c);
             }
 
             if (stack.Count != 1) throw new Exception("Not closed " + stack.Peek().Type);
-            return stack.Pop();
+            var sequence = stack.Pop();
+            CompressText(sequence);
+            return sequence;
+        }
+
+        void CompressText(Sequence sequence)
+        {
+            foreach (var e in sequence.Blocks.OfType<Sequence>())
+                CompressText(e);
+            for (int i = 0; i < sequence.Blocks.Count - 1; i++)
+            {
+                var thisText = sequence.Blocks[i] as TextBlock;
+                if (thisText == null) continue;
+                if (thisText.Type != TextBlockType.Text) continue;
+                var nextText = sequence.Blocks[i + 1] as TextBlock;
+                if (nextText == null) continue;
+                if (nextText.Type != TextBlockType.Text) continue;
+                thisText.Entry += nextText.Entry;
+                sequence.Blocks.RemoveAt(i + 1);
+                i--;
+            }
         }
     }
 }
