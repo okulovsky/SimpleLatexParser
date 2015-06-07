@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 namespace LatexParser
 {
     [TestFixture]
-    class Level1Tests
+    class TokenizationTest
     {
         public void Run(string latex, params IBlock[] entry)
         {
             var expected = new Sequence(SequenceType.Free, entry);
-            var given = new Level1Parser().Parse(latex);
+            var given = new Layer1Parser().Parse(latex);
             Assert.IsTrue(expected.Equals(given));
         }
         
@@ -30,7 +30,7 @@ namespace LatexParser
         }
 
         [Test]       
-        public void TestEscapes()
+        public void Escapes()
         {
             Run(@"\\\%\{\}\[\]\<\>",
                 Latex.Escape("\\"),
@@ -43,19 +43,19 @@ namespace LatexParser
                 Latex.Escape(">"));
         }
         [Test]
-        public void TestCommand()
+        public void Command()
         {
-            Run(@"\test test", Latex.Command("test"), Latex.Text(" test"));
+            Run(@"\test test", Latex.CommandToken("test"), Latex.Text(" test"));
         }
 
         [Test]
-        public void TestBrackets()
+        public void Brackets()
         {
             Run("{ab}[ab]<ab>", Latex.Curly(Latex.Text("ab")), Latex.Square(Latex.Text("ab")), Latex.Angular(Latex.Text("ab")));
         }
 
         [Test]
-        public void TestNesting()
+        public void Nesting()
         {
             Run("{a{b[c]}}", Latex.Curly(Latex.Text("a"), Latex.Curly(Latex.Text("b"), Latex.Square(Latex.Text("c")))));
         }
@@ -65,6 +65,10 @@ namespace LatexParser
         {
             Run("a<b", Latex.Text("a<b"));
         }
-
+        
+        public void KnownBugWithLeftAndRight()
+        {
+            //Run("\\left[\\right]") don't know how result sohuld look
+        }
     }
 }

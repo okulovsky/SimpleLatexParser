@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LatexParser
 {
-    class Level1Parser
+    class Layer1Parser
     {
         public const string EscapedCharacters = "\\[]{}<>%";
         public const string CommandCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";

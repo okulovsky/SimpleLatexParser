@@ -75,18 +75,48 @@ namespace LatexParser
         }
     }
 
+    public class CommandBlock : IBlock
+    {
+        public TextBlock CommandToken;
+        public List<Sequence> Arguments = new List<Sequence>();
+        public override bool Equals(object _obj)
+        {
+            var obj = _obj as CommandBlock;
+            if (obj == null) return false;
+            if (!CommandToken.Equals(obj.CommandToken)) return false;
+            if (Arguments.Count != obj.Arguments.Count) return false;
+            for (int i = 0; i < Arguments.Count; i++)
+                if (!Arguments[i].Equals(obj.Arguments[i])) return false;
+            return true;
+        }
+        public override string ToString()
+        {
+            return CommandToken.ToString() + Arguments.Select(z => z.ToString()).Aggregate((a, b) => a + b);
+        }
+    }
+
     public static class Latex
     {
-        public static IBlock Text(string text) { return new TextBlock(TextBlockType.Text, text); }
-        public static IBlock Comment(string comment) { return new TextBlock(TextBlockType.Comment, comment); }
-        public static IBlock Escape(string text) { return new TextBlock(TextBlockType.Escape, text); }
+        public static TextBlock Text(string text) { return new TextBlock(TextBlockType.Text, text); }
+        public static TextBlock Comment(string comment) { return new TextBlock(TextBlockType.Comment, comment); }
+        public static TextBlock Escape(string text) { return new TextBlock(TextBlockType.Escape, text); }
 
-        public static IBlock Command(string name) { return new TextBlock(TextBlockType.Command, name); }
+        public static TextBlock CommandToken(string name) { return new TextBlock(TextBlockType.Command, name); }
 
-        public static IBlock Free(params IBlock[] blocks) { return new Sequence(SequenceType.Free, blocks); }
-        public static IBlock Curly(params IBlock[] blocks) { return new Sequence(SequenceType.Curly, blocks); }
-        public static IBlock Square(params IBlock[] blocks) { return new Sequence(SequenceType.Square, blocks); }
-        public static IBlock Angular(params IBlock[] blocks) { return new Sequence(SequenceType.Angular, blocks); }
+        public static CommandBlock Command(string name, params Sequence[] arguments )
+        {
+            return new CommandBlock
+            {
+                CommandToken = new TextBlock(TextBlockType.Command, name),
+                Arguments = arguments.ToList()
+            };
+        }
+
+        public static Sequence Free(params IBlock[] blocks) { return new Sequence(SequenceType.Free, blocks); }
+        public static Sequence Curly(params IBlock[] blocks) { return new Sequence(SequenceType.Curly, blocks); }
+        public static Sequence Square(params IBlock[] blocks) { return new Sequence(SequenceType.Square, blocks); }
+        public static Sequence Angular(params IBlock[] blocks) { return new Sequence(SequenceType.Angular, blocks); }
+
 
     }
 }
