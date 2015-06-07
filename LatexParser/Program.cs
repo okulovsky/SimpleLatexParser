@@ -10,6 +10,7 @@ namespace LatexParser
     {
         static void Main(string[] args)
         {
+            new Level1Tests().TestEscapes();
         }
     }
 }

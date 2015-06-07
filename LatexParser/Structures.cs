@@ -13,7 +13,7 @@ namespace LatexParser
         Square,
         Angular
     }
-    public class Sequence
+    public class Sequence : IBlock
     {
         public SequenceType Type { get; set; }
         public readonly List<IBlock> Blocks = new List<IBlock>();
@@ -44,7 +44,8 @@ namespace LatexParser
     {
         Text,
         Comment,
-        Screened
+        Escape,
+        Command
     }
 
     public class TextBlock : IBlock
@@ -64,29 +65,13 @@ namespace LatexParser
             if (obj == null) return false;
             return Type == obj.Type && Entry == obj.Entry;
         }
-    }
 
-
-
-    public class CommandBlock : IBlock
-    {
-        public string Name { get; set; }
-        public readonly List<Sequence> Arguments = new List<Sequence>();
-        public CommandBlock(string name, params Sequence[] arguments)
+        public override string ToString()
         {
-            Name = name;
-            Arguments = arguments.ToList();
-        }
-
-        public override bool Equals(object _obj)
-        {
-            var obj = _obj as CommandBlock;
-            if (obj == null) return false;
-            if (Name != obj.Name) return false;
-            if (Arguments.Count != obj.Arguments.Count) return false;
-            for (int i = 0; i < Arguments.Count; i++)
-                if (!Arguments[i].Equals(obj.Arguments[i])) return false;
-            return true;
+            var prefix = "";
+            if (Type == TextBlockType.Comment) prefix = "%";
+            if (Type == TextBlockType.Escape || Type == TextBlockType.Command) prefix = "\\";
+            return prefix + Entry;
         }
     }
 
@@ -94,14 +79,14 @@ namespace LatexParser
     {
         public static IBlock Text(string text) { return new TextBlock(TextBlockType.Text, text); }
         public static IBlock Comment(string comment) { return new TextBlock(TextBlockType.Comment, comment); }
-        public static IBlock Screen(string text) { return new TextBlock(TextBlockType.Screened, text); }
+        public static IBlock Escape(string text) { return new TextBlock(TextBlockType.Escape, text); }
 
-        public static IBlock Cmd(string name, params Sequence[] sequence) { return new CommandBlock(name, sequence); }
+        public static IBlock Command(string name) { return new TextBlock(TextBlockType.Command, name); }
 
-        public static Sequence Free(params IBlock[] blocks) { return new Sequence(SequenceType.Free, blocks); }
-        public static Sequence Curly(params IBlock[] blocks) { return new Sequence(SequenceType.Curly, blocks); }
-        public static Sequence Square(params IBlock[] blocks) { return new Sequence(SequenceType.Square, blocks); }
-        public static Sequence Angular(params IBlock[] blocks) { return new Sequence(SequenceType.Angular, blocks); }
+        public static IBlock Free(params IBlock[] blocks) { return new Sequence(SequenceType.Free, blocks); }
+        public static IBlock Curly(params IBlock[] blocks) { return new Sequence(SequenceType.Curly, blocks); }
+        public static IBlock Square(params IBlock[] blocks) { return new Sequence(SequenceType.Square, blocks); }
+        public static IBlock Angular(params IBlock[] blocks) { return new Sequence(SequenceType.Angular, blocks); }
 
     }
 }
